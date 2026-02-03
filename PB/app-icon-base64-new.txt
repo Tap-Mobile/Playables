@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhotoBoost Playable Preview</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #0a0a12;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        
+        .ad-container {
+            width: 100%;
+            height: 100vh;
+            max-width: 450px;
+            position: relative;
+            background: linear-gradient(165deg, #581c87 0%, #7c3aed 50%, #a78bfa 100%);
+            display: flex;
+            flex-direction: column;
+            padding: 5% 5% 8% 5%;
+        }
+
+        /* Scalable App Icon Fix */
+        .app-logo {
+            position: absolute;
+            top: 4%;
+            left: 5%;
+            width: 12vw;
+            max-width: 50px;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        
+        .header-area {
+            margin-left: 15vw; /* Prevents overlap with icon */
+            margin-bottom: 5%;
+        }
+        
+        .heading {
+            font-size: 5.5vmin;
+            font-weight: 800;
+            color: white;
+            line-height: 1.1;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .subheading {
+            margin-top: 2px;
+            font-size: 3vmin;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .comparison-wrapper {
+            flex: 1;
+            position: relative;
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        
+        .img-after { width: 100%; height: 100%; object-fit: cover; position: absolute; }
+        
+        .img-before-container {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            clip-path: inset(0 50% 0 0);
+            z-index: 2;
+        }
+        
+        /* Dull/Desaturated Filter for Before */
+        .img-before {
+            width: 100%; height: 100%; object-fit: cover;
+            filter: blur(10px) saturate(0.2) brightness(0.7);
+        }
+        
+        .slider-bar {
+            position: absolute; top: 0; left: 50%;
+            width: 3px; height: 100%;
+            background: white;
+            z-index: 10;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        
+        .slider-handle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 12vw; height: 12vw;
+            max-width: 50px; max-height: 50px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+            z-index: 12;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* UI Finger Animation - Centered on Y Axis */
+        .hint-finger {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 4.47 13.53 2 10.5 2S5 4.47 5 7.5c0 1.56.79 2.93 2 3.74V21a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-3.33c0-.52-.2-1.03-.57-1.41L15 12V11.24z"/></svg>') no-repeat center;
+            z-index: 20;
+            pointer-events: none;
+            animation: handSlide 2.5s infinite ease-in-out, handPulse 0.8s infinite alternate;
+        }
+
+        @keyframes handPulse { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.2); } }
+        @keyframes handSlide { 0%, 100% { margin-left: -50px; } 50% { margin-left: 50px; } }
+        
+        .label {
+            position: absolute;
+            bottom: 20%;
+            padding: 2% 5%;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 2.5vmin;
+            font-weight: 700;
+            border-radius: 30px;
+            text-transform: uppercase;
+        }
+        .label-before { left: 5%; z-index: 5; }
+        .label-after { right: 5%; z-index: 5; }
+        
+        .footer-text {
+            margin-top: 5%;
+            font-size: 3.5vmin;
+            color: white;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="ad-container">
+        <img class="app-logo" src="data:image/jpeg;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAACXBIWXMAAAWJAAAFiQFtaJ36AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUABSL8SURBVHgB1P1Jky1JdiaIHb3z7LO/OabMiMpEJsZqAF3FmkTYwjWFlF7yD1AopEhT2NLcUchesKu5JSnckwtSuCJFyA2rUAUUUEABKGQWkAkgMyJjfIPPfufZlOc7Opiqmd3r1/29SFRb5gu/95qZmqqamX7f+c7Ro+rr/+v/U5OiO7biA5RSpLWmO8/e8biHbt92+Ruvc2e/bdjeQVXjuuj0+

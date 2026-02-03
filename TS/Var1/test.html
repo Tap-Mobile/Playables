@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Tap Scanner - Variant 1 Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .test-info {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .phone-frame {
+            width: 320px;
+            height: 640px;
+            background: #000;
+            border-radius: 40px;
+            padding: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+            background: #E8F4FC;
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            padding: 48px 20px 20px;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Screen 1: Intro */
+        .intro-screen {
+            background: linear-gradient(180deg, #E8F4FC 0%, #D0E8F7 100%);
+        }
+
+        .headline {
+            font-size: 24px;
+            font-weight: 800;
+            color: #1A1A2E;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .subheadline {
+            font-size: 14px;
+            color: #555;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .document-container {
+            position: relative;
+            width: 85%;
+            max-width: 240px;
+            aspect-ratio: 3/4;
+            margin-bottom: 20px;
+        }
+
+        .messy-paper {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            transform: rotate(-5deg);
+            overflow: hidden;
+        }
+
+        .paper-content {
+            padding: 20px;
+            height: 100%;
+        }
+
+        .paper-line {
+            height: 10px;
+            background: #E0E0E0;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .paper-line:nth-child(1) { width: 80%; }
+        .paper-line:nth-child(2) { width: 100%; }
+        .paper-line:nth-child(3) { width: 90%; }
+        .paper-line:nth-child(4) { width: 70%; }
+        .paper-line:nth-child(5) { width: 95%; }
+        .paper-line:nth-child(6) { width: 60%; }
+        .paper-line:nth-child(7) { width: 85%; }
+        .paper-line:nth-child(8) { width: 75%; }
+
+        .paper-shadow {
+            position: absolute;
+            bottom: -15px;
+            left: 10%;
+            width: 80%;
+            height: 30px;
+            background: radial-gradient(ellipse, rgba(0,0,0,0.2) 0%, transparent 70%);
+        }
+
+        .scan-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 90%;
+            pointer-events: none;
+        }
+
+        .corner {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            border: 4px solid #3AAFE9;
+        }
+
+        .corner.tl { top: 0; left: 0; border-right: none; border-bottom: none; border-radius: 8px 0 0 0; }
+        .corner.tr { top: 0; right: 0; border-left: none; border-bottom: none; border-radius: 0 8px 0 0; }
+        .corner.bl { bottom: 0; left: 0; border-right: none; border-top: none; border-radius: 0 0 0 8px; }
+        .corner.br { bottom: 0; right: 0; border-left: none; border-top: none; border-radius: 0 0 8px 0; }
+
+        .tutorial-hand {
+            position: absolute;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            opacity: 0;
+        }
+
+        .tap-hint {
+            font-size: 14px;
+            color: #3AAFE9;
+            font-weight: 600;
+            margin-top: 16px;
+        }
+
+        /* Screen 2: Scanning */
+        .scan-screen {
+            background: linear-gradient(180deg, #E8F4FC 0%, #D0E8F7 100%);
+        }
+
+        .scanning-container {
+            position: relative;
+            width: 85%;
+            max-width: 240px;
+            aspect-ratio: 3/4;
+        }
+
+        .scanned-paper {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            transform: rotate(0deg);
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        .scan-laser {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #3AAFE9, #3AAFE9, transparent);
+            box-shadow: 0 0 20px #3AAFE9, 0 0 40px #3AAFE9;
+            opacity: 0;
+        }
+
+        .edge-highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 3px solid #3AAFE9;
+            border-radius: 8px;
+            opacity: 0;
+            box-shadow: 0 0 20px rgba(58, 175, 233, 0.5);
+        }
+
+        .success-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #3AAFE9 0%, #2D8BC9 100%);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 16px;
+            box-shadow: 0 8px 30px rgba(58, 175, 233, 0.4);
+            white-space: nowrap;
+        }
+
+        .pdf-icon {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            background: #E74C3C;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        /* Screen 3: CTA */
+        .cta-screen {
+            background: linear-gradient(180deg, #3AAFE9 0%, #2D8BC9 100%);
+            justify-content: space-between;
+            padding: 50px 20px 30px;
+        }
+
+        .cta-logo {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 12px;
+        }
+
+        .cta-logo svg {
+            width: 70%;
+            height: 70%;
+        }
+
+        .cta-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .cta-subtitle {
+            font-size: 14px;
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .feature-pills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .pill {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .cta-button {
+            width: 85%;
+            max-width: 240px;
+            padding: 16px 28px;
+            background: white;
+            color: #2D8BC9;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .cta-button:active {
+            transform: scale(0.96);
+        }
+
+        .store-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.8);
+            font-size: 11px;
+            margin-top: 12px;
+        }
+
+        .store-badge svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .cta-top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .cta-bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Test controls */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .controls button {
+            padding: 10px 20px;
+            background: #3AAFE9;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .controls button:hover {
+            background: #2D8BC9;
+        }
+
+        .screen-indicator {
+            color: #888;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tap Scanner - Variant 1</h1>
+    <p class="test-info">Magic Document Scan (Local Test Version)</p>
+
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <!-- Screen 1: Intro -->
+            <div class="screen intro-screen active" id="screen1">
+                <h1 class="headline">Messy Documents?</h1>
+                <p class="subheadline">Turn paper into perfect PDFs instantly</p>
+
+                <div class="document-container">
+                    <div class="paper-shadow"></div>
+                    <div class="messy-paper">
+                        <div class="paper-content">
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                        </div>
+                    </div>
+                    <div class="scan-frame">
+                        <div class="corner tl"></div>
+                        <div class="corner tr"></div>
+                        <div class="corner bl"></div>
+                        <div class="corner br"></div>
+                    </div>
+                    <div class="tutorial-hand" id="tutorialHand">👆</div>
+                </div>
+
+                <p class="tap-hint">Tap to scan</p>
+            </div>
+
+            <!-- Screen 2: Scanning Animation -->
+            <div class="screen scan-screen" id="screen2">
+                <h1 class="headline">Scanning...</h1>
+
+                <div class="scanning-container">
+                    <div class="messy-paper" id="scanPaper">
+                        <div class="paper-content">
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                        </div>
+                    </div>
+                    <div class="scanned-paper" id="scannedPaper">
+                        <div class="paper-content">
+                            <div class="paper-line" style="background: #333;"></div>
+                            <div class="paper-line" style="background: #333;"></div>
+                            <div class="paper-line" style="background: #333;"></div>
+                            <div class="paper-line" style="background: #333;"></div>
+                            <div class="paper-line" style="background: #333;"></div>
+                            <div class="paper-line" style="background: #333;"></div>
+                            <div class="paper-line" style="background: #333;"></div>
+                            <div class="paper-line" style="background: #333;"></div>
+                        </div>
+                    </div>
+                    <div class="scan-laser" id="scanLaser"></div>
+                    <div class="edge-highlight" id="edgeHighlight"></div>
+                    <div class="success-badge" id="successBadge">✓ PDF Ready!</div>
+                    <div class="pdf-icon" id="pdfIcon">PDF</div>
+                </div>
+            </div>
+
+            <!-- Screen 3: CTA -->
+            <div class="screen cta-screen" id="screen3">
+                <div class="cta-top">
+                    <div class="cta-logo">
+                        <svg viewBox="0 0 100 100" fill="none">
+                            <rect x="10" y="10" width="4" height="20" fill="#3AAFE9"/>
+                            <rect x="10" y="10" width="20" height="4" fill="#3AAFE9"/>
+                            <rect x="86" y="10" width="4" height="20" fill="#3AAFE9"/>
+                            <rect x="70" y="10" width="20" height="4" fill="#3AAFE9"/>
+                            <rect x="10" y="70" width="4" height="20" fill="#3AAFE9"/>
+                            <rect x="10" y="86" width="20" height="4" fill="#3AAFE9"/>
+                            <rect x="86" y="70" width="4" height="20" fill="#3AAFE9"/>
+                            <rect x="70" y="86" width="20" height="4" fill="#3AAFE9"/>
+                            <path d="M35 65 L35 45 L50 30 L65 45 L65 65 L35 65" fill="#3AAFE9" opacity="0.3"/>
+                            <path d="M30 70 L30 50 L50 25 L70 50 L70 70 L30 70" fill="none" stroke="#3AAFE9" stroke-width="4"/>
+                            <rect x="40" y="75" width="20" height="8" rx="2" fill="#3AAFE9"/>
+                            <text x="50" y="82" text-anchor="middle" font-size="7" font-weight="bold" fill="white">PDF</text>
+                        </svg>
+                    </div>
+                    <h1 class="cta-title">Tap Scanner</h1>
+                    <p class="cta-subtitle">Perfect scans, every time</p>
+
+                    <div class="feature-pills">
+                        <span class="pill">📄 Smart Scan</span>
+                        <span class="pill">✨ Auto-Enhance</span>
+                        <span class="pill">📁 PDF Export</span>
+                    </div>
+                </div>
+
+                <div class="cta-bottom">
+                    <button class="cta-button" onclick="handleCTA()">Install Free</button>
+                    <div class="store-badge">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
+                        </svg>
+                        Google Play
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="resetPlayable()">🔄 Reset</button>
+        <button onclick="goToScreen(1)">1: Intro</button>
+        <button onclick="goToScreen(2)">2: Scan</button>
+        <button onclick="goToScreen(3)">3: CTA</button>
+    </div>
+    <p class="screen-indicator">Current: <span id="currentScreen">1</span> / 3</p>
+
+    <script>
+        let currentScreen = 1;
+
+        function init() {
+            // Animate tutorial hand
+            gsap.to('#tutorialHand', {
+                opacity: 1,
+                duration: 0.5,
+                delay: 0.5
+            });
+
+            gsap.to('#tutorialHand', {
+                y: -15,
+                duration: 0.6,
+                repeat: -1,
+                yoyo: true,
+                ease: 'power1.inOut'
+            });
+
+            // Animate scan frame corners
+            gsap.fromTo('.corner',
+                { opacity: 0.3 },
+                { opacity: 1, duration: 0.8, repeat: -1, yoyo: true, ease: 'power1.inOut' }
+            );
+        }
+
+        function goToScreen(num) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+            gsap.to('#screen' + currentScreen, {
+                opacity: 0,
+                duration: 0.3,
+                onComplete: () => {
+                    document.getElementById('screen' + num).classList.add('active');
+                    gsap.fromTo('#screen' + num, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+
+                    if (num === 2) playScanAnimation();
+                    if (num === 3) playCTAAnimation();
+                }
+            });
+
+            currentScreen = num;
+            document.getElementById('currentScreen').textContent = num;
+        }
+
+        function playScanAnimation() {
+            const tl = gsap.timeline();
+
+            // Reset states
+            gsap.set('#scanPaper', { opacity: 0, rotation: -5 });
+            gsap.set('#scannedPaper', { opacity: 0 });
+            gsap.set('#scanLaser', { opacity: 0, top: 0 });
+            gsap.set('#edgeHighlight', { opacity: 0 });
+            gsap.set('#successBadge', { scale: 0 });
+            gsap.set('#pdfIcon', { scale: 0 });
+
+            // Show the messy paper first
+            tl.to('#scanPaper', { opacity: 1, duration: 0.3 });
+
+            // Show and animate scan laser
+            tl.to('#scanLaser', { opacity: 1, duration: 0.1 });
+            tl.to('#scanLaser', { top: '100%', duration: 1.5, ease: 'power1.inOut' });
+            tl.to('#scanLaser', { opacity: 0, duration: 0.2 });
+
+            // Show edge highlight
+            tl.to('#edgeHighlight', { opacity: 1, duration: 0.3 }, '-=0.5');
+
+            // Transform: straighten and enhance
+            tl.to('#scanPaper', { rotation: 0, duration: 0.5, ease: 'back.out' });
+            tl.to('#edgeHighlight', { opacity: 0, duration: 0.3 });
+
+            // Cross-fade to clean version
+            tl.to('#scannedPaper', { opacity: 1, duration: 0.5 });
+            tl.to('#scanPaper', { opacity: 0, duration: 0.3 }, '-=0.3');
+
+            // Show success badge
+            tl.to('#successBadge', { scale: 1, duration: 0.4, ease: 'back.out' });
+            tl.to('#pdfIcon', { scale: 1, duration: 0.3, ease: 'back.out' }, '-=0.2');
+
+            // Go to CTA after animation
+            tl.call(() => {
+                setTimeout(() => goToScreen(3), 800);
+            });
+        }
+
+        function playCTAAnimation() {
+            gsap.fromTo('.cta-logo',
+                { scale: 0.8, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out' }
+            );
+            gsap.fromTo('.cta-title',
+                { y: 20, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.4, delay: 0.2 }
+            );
+            gsap.fromTo('.cta-subtitle',
+                { y: 20, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.4, delay: 0.3 }
+            );
+            gsap.fromTo('.feature-pills',
+                { y: 20, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.4, delay: 0.4 }
+            );
+            gsap.fromTo('.cta-button',
+                { scale: 0.9, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.5, delay: 0.5, ease: 'back.out' }
+            );
+
+            // Pulse CTA button
+            gsap.to('.cta-button', {
+                scale: 1.03,
+                duration: 0.8,
+                repeat: -1,
+                yoyo: true,
+                delay: 1,
+                ease: 'power1.inOut'
+            });
+        }
+
+        function handleCTA() {
+            alert('✅ CTA Clicked!\n\nIn production, this will redirect to the Play Store.');
+        }
+
+        function resetPlayable() {
+            // Reset all states
+            gsap.killTweensOf('*');
+
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+                gsap.set(s, { opacity: 0 });
+            });
+
+            // Reset screen 2 elements
+            gsap.set('#scanPaper', { opacity: 0, rotation: -5 });
+            gsap.set('#scannedPaper', { opacity: 0 });
+            gsap.set('#scanLaser', { opacity: 0, top: 0 });
+            gsap.set('#edgeHighlight', { opacity: 0 });
+            gsap.set('#successBadge', { scale: 0 });
+            gsap.set('#pdfIcon', { scale: 0 });
+
+            // Activate screen 1
+            document.getElementById('screen1').classList.add('active');
+            gsap.set('#screen1', { opacity: 1 });
+
+            currentScreen = 1;
+            document.getElementById('currentScreen').textContent = 1;
+
+            // Re-initialize
+            init();
+        }
+
+        // Click handlers
+        document.getElementById('screen1').addEventListener('click', () => {
+            if (currentScreen === 1) goToScreen(2);
+        });
+
+        document.getElementById('screen2').addEventListener('click', () => {
+            if (currentScreen === 2) goToScreen(3);
+        });
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

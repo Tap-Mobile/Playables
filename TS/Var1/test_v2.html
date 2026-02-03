@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Tap Scanner - Variant 1 v2 Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a1a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .test-info {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .version-badge {
+            background: linear-gradient(135deg, #3EB5F8, #1263D3);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .phone-frame {
+            width: 320px;
+            height: 640px;
+            background: #1a1a2e;
+            border-radius: 40px;
+            padding: 10px;
+            box-shadow: 0 25px 80px rgba(62,181,248,0.2);
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+            background: radial-gradient(circle at center, #3EB5F8 0%, #1263D3 100%);
+        }
+
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            padding: 48px 20px 20px;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Screen 1: Intro */
+        .intro-screen {
+            background: radial-gradient(circle at center, #3EB5F8 0%, #1263D3 100%);
+        }
+
+        .headline {
+            font-size: 24px;
+            font-weight: 900;
+            color: #FFFFFF;
+            text-align: center;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .subheadline {
+            font-size: 13px;
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .document-container {
+            position: relative;
+            width: 70%;
+            max-width: 200px;
+            aspect-ratio: 3/4;
+            margin-bottom: 24px;
+        }
+
+        .document-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.4));
+        }
+
+        .messy-paper {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #FFFFFF;
+            border-radius: 10px;
+            transform: rotate(-4deg);
+            overflow: hidden;
+        }
+
+        .paper-content {
+            padding: 18px;
+            height: 100%;
+        }
+
+        .paper-line {
+            height: 8px;
+            background: linear-gradient(90deg, #E8E8E8 0%, #D0D0D0 100%);
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .paper-line:nth-child(1) { width: 75%; }
+        .paper-line:nth-child(2) { width: 100%; }
+        .paper-line:nth-child(3) { width: 85%; }
+        .paper-line:nth-child(4) { width: 65%; }
+        .paper-line:nth-child(5) { width: 95%; }
+        .paper-line:nth-child(6) { width: 55%; }
+        .paper-line:nth-child(7) { width: 80%; }
+        .paper-line:nth-child(8) { width: 70%; }
+
+        .scan-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 95%;
+            height: 95%;
+            pointer-events: none;
+        }
+
+        .corner {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border: 4px solid #FFFFFF;
+        }
+
+        .corner.tl { top: -6px; left: -6px; border-right: none; border-bottom: none; border-radius: 10px 0 0 0; }
+        .corner.tr { top: -6px; right: -6px; border-left: none; border-bottom: none; border-radius: 0 10px 0 0; }
+        .corner.bl { bottom: -6px; left: -6px; border-right: none; border-top: none; border-radius: 0 0 0 10px; }
+        .corner.br { bottom: -6px; right: -6px; border-left: none; border-top: none; border-radius: 0 0 10px 0; }
+
+        /* Professional Tap Indicator */
+        .tap-indicator {
+            position: absolute;
+            bottom: 18%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+        }
+
+        .tap-circle {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+
+        .tap-hand {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .tap-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.5);
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        /* Pill Button CTA */
+        .tap-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.4);
+            padding: 12px 24px;
+            border-radius: 50px;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+
+        .tap-button-text {
+            font-size: 14px;
+            color: #FFFFFF;
+            font-weight: 700;
+        }
+
+        .tap-button-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Screen 2: Scanning */
+        .scan-screen {
+            background: radial-gradient(circle at center, #3EB5F8 0%, #1263D3 100%);
+        }
+
+        .scanning-container {
+            position: relative;
+            width: 70%;
+            max-width: 200px;
+            aspect-ratio: 3/4;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.4));
+        }
+
+        .scanned-paper {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #FFFFFF;
+            border-radius: 10px;
+            overflow: hidden;
+            opacity: 0;
+        }
+
+        .scan-laser {
+            position: absolute;
+            top: 0;
+            left: -5%;
+            width: 110%;
+            height: 5px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(255,255,255,0.3) 20%,
+                #FFFFFF 50%,
+                rgba(255,255,255,0.3) 80%,
+                transparent 100%);
+            box-shadow:
+                0 0 20px #3EB5F8,
+                0 0 40px #3EB5F8,
+                0 0 60px rgba(62,181,248,0.5);
+            border-radius: 3px;
+            opacity: 0;
+        }
+
+        .edge-highlight {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 4px solid #FFFFFF;
+            border-radius: 10px;
+            opacity: 0;
+            box-shadow:
+                0 0 30px rgba(255,255,255,0.6),
+                inset 0 0 30px rgba(255,255,255,0.1);
+        }
+
+        .success-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: #FFFFFF;
+            color: #1263D3;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .success-check {
+            width: 22px;
+            height: 22px;
+            background: #22C55E;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pdf-icon {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 12px;
+            box-shadow: 0 6px 16px rgba(231,76,60,0.4);
+        }
+
+        /* Screen 3: CTA */
+        .cta-screen {
+            background: radial-gradient(circle at center, #3EB5F8 0%, #1263D3 100%);
+            justify-content: space-between;
+            padding: 50px 20px 30px;
+        }
+
+        .cta-logo {
+            width: 90px;
+            height: 90px;
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+            margin-bottom: 16px;
+        }
+
+        .cta-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cta-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #FFFFFF;
+            text-align: center;
+            margin-bottom: 6px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .cta-subtitle {
+            font-size: 13px;
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .feature-pills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .pill {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .cta-button {
+            width: 85%;
+            max-width: 240px;
+            padding: 16px 28px;
+            background: #FFFFFF;
+            color: #1263D3;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .cta-button:active {
+            transform: scale(0.96);
+        }
+
+        .cta-button-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .cta-button-icon img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .store-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+            margin-top: 14px;
+        }
+
+        .store-badge svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .cta-top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .cta-bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Test controls */
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .controls button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #3EB5F8, #1263D3);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .controls button:hover {
+            transform: scale(1.05);
+        }
+
+        .screen-indicator {
+            color: #888;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tap Scanner - Variant 1 <span class="version-badge">v2</span></h1>
+    <p class="test-info">Magic Document Scan - Updated Branding</p>
+
+    <div class="phone-frame">
+        <div class="phone-screen">
+            <!-- Screen 1: Intro -->
+            <div class="screen intro-screen active" id="screen1">
+                <h1 class="headline">Messy Documents?</h1>
+                <p class="subheadline">Turn paper into perfect PDFs instantly</p>
+
+                <div class="document-container">
+                    <div class="document-wrapper">
+                        <div class="messy-paper">
+                            <div class="paper-content">
+                                <div class="paper-line"></div>
+                                <div class="paper-line"></div>
+                                <div class="paper-line"></div>
+                                <div class="paper-line"></div>
+                                <div class="paper-line"></div>
+                                <div class="paper-line"></div>
+                                <div class="paper-line"></div>
+                                <div class="paper-line"></div>
+                            </div>
+                        </div>
+                        <div class="scan-frame">
+                            <div class="corner tl"></div>
+                            <div class="corner tr"></div>
+                            <div class="corner bl"></div>
+                            <div class="corner br"></div>
+                        </div>
+                    </div>
+
+                    <!-- Professional Tap Indicator -->
+                    <div class="tap-indicator" id="tapIndicator">
+                        <div class="tap-circle">
+                            <svg class="tap-hand" viewBox="0 0 80 80" fill="none">
+                                <circle cx="40" cy="40" r="25" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="3"/>
+                                <circle cx="40" cy="40" r="8" fill="white"/>
+                            </svg>
+                            <div class="tap-ring" id="tapRing1"></div>
+                            <div class="tap-ring" id="tapRing2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pill Button -->
+                <div class="tap-button" id="tapButton">
+                    <svg class="tap-button-icon" viewBox="0 0 24 24" fill="white">
+                        <path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74a4.5 4.5 0 0 0-9 0c0 1.56.79 2.93 2 3.74zm5.5 2.47l-5.5-1.5v7.29l6.5-1.5v-4.29z"/>
+                    </svg>
+                    <span class="tap-button-text">Tap to Scan</span>
+                </div>
+            </div>
+
+            <!-- Screen 2: Scanning Animation -->
+            <div class="screen scan-screen" id="screen2">
+                <h1 class="headline">Scanning...</h1>
+
+                <div class="scanning-container">
+                    <div class="messy-paper" id="scanPaper">
+                        <div class="paper-content">
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                            <div class="paper-line"></div>
+                        </div>
+                    </div>
+                    <div class="scanned-paper" id="scannedPaper">
+                        <div class="paper-content">
+                            <div class="paper-line" style="background: linear-gradient(90deg, #333 0%, #444 100%);"></div>
+                            <div class="paper-line" style="background: linear-gradient(90deg, #333 0%, #444 100%);"></div>
+                            <div class="paper-line" style="background: linear-gradient(90deg, #333 0%, #444 100%);"></div>
+                            <div class="paper-line" style="background: linear-gradient(90deg, #333 0%, #444 100%);"></div>
+                            <div class="paper-line" style="background: linear-gradient(90deg, #333 0%, #444 100%);"></div>
+                            <div class="paper-line" style="background: linear-gradient(90deg, #333 0%, #444 100%);"></div>
+                            <div class="paper-line" style="background: linear-gradient(90deg, #333 0%, #444 100%);"></div>
+                            <div class="paper-line" style="background: linear-gradient(90deg, #333 0%, #444 100%);"></div>
+                        </div>
+                    </div>
+                    <div class="scan-laser" id="scanLaser"></div>
+                    <div class="edge-highlight" id="edgeHighlight"></div>
+                    <div class="success-badge" id="successBadge">
+                        <span class="success-check">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="white">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                            </svg>
+                        </span>
+                        PDF Ready!
+                    </div>
+                    <div class="pdf-icon" id="pdfIcon">PDF</div>
+                </div>
+            </div>
+
+            <!-- Screen 3: CTA -->
+            <div class="screen cta-screen" id="screen3">
+                <div class="cta-top">
+                    <div class="cta-logo">
+                        <img src="Assets/icon.png" alt="Tap Scanner">
+                    </div>
+                    <h1 class="cta-title">Tap Scanner</h1>
+                    <p class="cta-subtitle">Perfect scans, every time</p>
+
+                    <div class="feature-pills">
+                        <span class="pill">📄 Smart Scan</span>
+                        <span class="pill">✨ Auto-Enhance</span>
+                        <span class="pill">📁 PDF Export</span>
+                    </div>
+                </div>
+
+                <div class="cta-bottom">
+                    <button class="cta-button" onclick="handleCTA()">
+                        <span class="cta-button-icon">
+                            <img src="Assets/icon.png" alt="">
+                        </span>
+                        Install Free
+                    </button>
+                    <div class="store-badge">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
+                        </svg>
+                        Google Play
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="resetPlayable()">🔄 Reset</button>
+        <button onclick="goToScreen(1)">1: Intro</button>
+        <button onclick="goToScreen(2)">2: Scan</button>
+        <button onclick="goToScreen(3)">3: CTA</button>
+    </div>
+    <p class="screen-indicator">Current: <span id="currentScreen">1</span> / 3</p>
+
+    <script>
+        let currentScreen = 1;
+        let rippleInterval;
+
+        function init() {
+            // Animate tap indicator
+            gsap.to('#tapIndicator', {
+                opacity: 1,
+                duration: 0.5,
+                delay: 0.5
+            });
+
+            // Pulse animation for tap circle (scale 1.0 to 1.15)
+            gsap.to('#tapIndicator .tap-circle', {
+                scale: 1.15,
+                duration: 0.6,
+                repeat: -1,
+                yoyo: true,
+                ease: 'power1.inOut'
+            });
+
+            // Ripple effect
+            function createRipple() {
+                gsap.fromTo('#tapRing1',
+                    { scale: 0.5, opacity: 1 },
+                    { scale: 2, opacity: 0, duration: 1, ease: 'power1.out' }
+                );
+                gsap.fromTo('#tapRing2',
+                    { scale: 0.5, opacity: 1 },
+                    { scale: 2, opacity: 0, duration: 1, ease: 'power1.out', delay: 0.3 }
+                );
+            }
+            rippleInterval = setInterval(createRipple, 1500);
+            createRipple();
+
+            // Breathing animation for pill button
+            gsap.to('#tapButton', {
+                scale: 1.05,
+                duration: 1.2,
+                repeat: -1,
+                yoyo: true,
+                ease: 'power1.inOut'
+            });
+
+            // Animate scan frame corners
+            gsap.fromTo('.corner',
+                { opacity: 0.5 },
+                { opacity: 1, duration: 0.8, repeat: -1, yoyo: true, ease: 'power1.inOut' }
+            );
+        }
+
+        function goToScreen(num) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+            gsap.to('#screen' + currentScreen, {
+                opacity: 0,
+                duration: 0.3,
+                onComplete: () => {
+                    document.getElementById('screen' + num).classList.add('active');
+                    gsap.fromTo('#screen' + num, { opacity: 0 }, { opacity: 1, duration: 0.3 });
+
+                    if (num === 2) playScanAnimation();
+                    if (num === 3) playCTAAnimation();
+                }
+            });
+
+            currentScreen = num;
+            document.getElementById('currentScreen').textContent = num;
+        }
+
+        function playScanAnimation() {
+            const tl = gsap.timeline();
+
+            // Reset states
+            gsap.set('#scanPaper', { opacity: 0, rotation: -4 });
+            gsap.set('#scannedPaper', { opacity: 0 });
+            gsap.set('#scanLaser', { opacity: 0, top: 0 });
+            gsap.set('#edgeHighlight', { opacity: 0 });
+            gsap.set('#successBadge', { scale: 0 });
+            gsap.set('#pdfIcon', { scale: 0 });
+
+            // Show the messy paper first
+            tl.to('#scanPaper', { opacity: 1, duration: 0.3 });
+
+            // Show and animate glowing scan laser
+            tl.to('#scanLaser', { opacity: 1, duration: 0.1 });
+            tl.to('#scanLaser', { top: '100%', duration: 1.8, ease: 'power1.inOut' });
+            tl.to('#scanLaser', { opacity: 0, duration: 0.2 });
+
+            // Show edge highlight
+            tl.to('#edgeHighlight', { opacity: 1, duration: 0.3 }, '-=0.5');
+
+            // Transform: straighten and enhance
+            tl.to('#scanPaper', { rotation: 0, duration: 0.5, ease: 'back.out' });
+            tl.to('#edgeHighlight', { opacity: 0, duration: 0.3 });
+
+            // Cross-fade to clean version
+            tl.to('#scannedPaper', { opacity: 1, duration: 0.5 });
+            tl.to('#scanPaper', { opacity: 0, duration: 0.3 }, '-=0.3');
+
+            // Show success badge
+            tl.to('#successBadge', { scale: 1, duration: 0.5, ease: 'back.out' });
+            tl.to('#pdfIcon', { scale: 1, duration: 0.3, ease: 'back.out' }, '-=0.2');
+
+            // Go to CTA after animation
+            tl.call(() => {
+                setTimeout(() => goToScreen(3), 800);
+            });
+        }
+
+        function playCTAAnimation() {
+            gsap.fromTo('.cta-logo',
+                { scale: 0.7, opacity: 0, y: 20 },
+                { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: 'back.out' }
+            );
+            gsap.fromTo('.cta-title',
+                { y: 30, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.4, delay: 0.2 }
+            );
+            gsap.fromTo('.cta-subtitle',
+                { y: 20, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.4, delay: 0.3 }
+            );
+            gsap.fromTo('.feature-pills',
+                { y: 20, opacity: 0 },
+                { y: 0, opacity: 1, duration: 0.4, delay: 0.4 }
+            );
+            gsap.fromTo('.cta-button',
+                { scale: 0.85, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.5, delay: 0.5, ease: 'back.out' }
+            );
+
+            // Breathing CTA button
+            gsap.to('.cta-button', {
+                scale: 1.04,
+                duration: 1,
+                repeat: -1,
+                yoyo: true,
+                delay: 1,
+                ease: 'power1.inOut'
+            });
+        }
+
+        function handleCTA() {
+            alert('✅ CTA Clicked!\n\nIn production, this will redirect to the Play Store.');
+        }
+
+        function resetPlayable() {
+            // Kill all tweens
+            gsap.killTweensOf('*');
+            clearInterval(rippleInterval);
+
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+                gsap.set(s, { opacity: 0 });
+            });
+
+            // Reset screen 2 elements
+            gsap.set('#scanPaper', { opacity: 0, rotation: -4 });
+            gsap.set('#scannedPaper', { opacity: 0 });
+            gsap.set('#scanLaser', { opacity: 0, top: 0 });
+            gsap.set('#edgeHighlight', { opacity: 0 });
+            gsap.set('#successBadge', { scale: 0 });
+            gsap.set('#pdfIcon', { scale: 0 });
+            gsap.set('#tapIndicator', { opacity: 0 });
+            gsap.set('#tapButton', { scale: 1 });
+
+            // Activate screen 1
+            document.getElementById('screen1').classList.add('active');
+            gsap.set('#screen1', { opacity: 1 });
+
+            currentScreen = 1;
+            document.getElementById('currentScreen').textContent = 1;
+
+            // Re-initialize
+            setTimeout(init, 100);
+        }
+
+        // Click handlers
+        document.getElementById('screen1').addEventListener('click', () => {
+            if (currentScreen === 1) goToScreen(2);
+        });
+
+        document.getElementById('screen2').addEventListener('click', () => {
+            if (currentScreen === 2) goToScreen(3);
+        });
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
