@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="ad.orientation" content="portrait">
+    <meta name="ad.size" content="320x480">
+    <script src="https://tpc.googlesyndication.com/pagead/gadgets/html5/api/exitapi.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* ========== SCREEN 1: ID SCAN ========== */
+        .scan-screen {
+            justify-content: flex-start;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Background image with blur */
+        .bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('Assets/BG.png') center center / cover no-repeat;
+            filter: blur(3px);
+            transform: scale(1.05);
+        }
+
+        /* Vignette overlay */
+        .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 20%, rgba(0,0,0,0.75) 100%);
+            pointer-events: none;
+        }
+
+        /* Header */
+        .header {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding-top: 50px;
+            margin-bottom: 30px;
+        }
+
+        .headline {
+            font-size: 28px;
+            font-weight: 800;
+            color: #FFFFFF;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .subheadline {
+            font-size: 15px;
+            color: rgba(255,255,255,0.85);
+            text-shadow: 0 1px 5px rgba(0,0,0,0.5);
+        }
+
+        /* ID Card Area */
+        .card-area {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        .card-container {
+            position: relative;
+            width: 280px;
+            height: 180px;
+        }
+
+        /* Realistic ID Card */
+        .id-card {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 260px;
+            height: 160px;
+            background: linear-gradient(145deg, #1e3a5f 0%, #0d2137 50%, #1a4570 100%);
+            border-radius: 16px;
+            box-shadow:
+                0 20px 40px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            overflow: hidden;
+            animation: cardFloat 3s ease-in-out infinite;
+            transition: all 0.5s ease;
+        }
+
+        @keyframes cardFloat {
+            0%, 100% { transform: translate(-50%, -50%) rotate(-2deg); }
+            50% { transform: translate(-50%, -50%) rotate(2deg) translateY(-5px); }
+        }
+
+        /* Card content */
+        .card-header {
+            background: linear-gradient(90deg, #c9a227 0%, #f4d03f 50%, #c9a227 100%);
+            height: 8px;
+            width: 100%;
+        }
+
+        .card-body {
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .card-photo {
+            width: 60px;
+            height: 75px;
+            background: linear-gradient(180deg, #ddd 0%, #bbb 100%);
+            border-radius: 6px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .card-info {
+            flex: 1;
+        }
+
+        .card-line {
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            margin-bottom: 8px;
+        }
+
+        .card-line:nth-child(1) { width: 80%; }
+        .card-line:nth-child(2) { width: 100%; }
+        .card-line:nth-child(3) { width: 60%; }
+        .card-line:nth-child(4) { width: 90%; height: 8px; margin-top: 12px; }
+
+        .card-chip {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 40px;
+            height: 30px;
+            background: linear-gradient(135deg, #c9a227 0%, #f4d03f 50%, #c9a227 100%);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chip-lines {
+            width: 25px;
+            height: 20px;
+            background: repeating-linear-gradient(
+                90deg,
+                #a08020 0px,
+                #a08020 2px,
+                #c9a227 2px,
+                #c9a227 5px
+            );
+            border-radius: 2px;
+        }
+
+        /* Scanner Frame */
+        .scanner-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: 180px;
+            pointer-events: none;
+        }
+
+        .corner {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            border: 4px solid #3EB5F8;
+            animation: cornerPulse 1.5s ease-in-out infinite;
+        }
+
+        .corner.tl { top: -10px; left: -10px; border-right: none; border-bottom: none; border-radius: 10px 0 0 0; }
+        .corner.tr { top: -10px; right: -10px; border-left: none; border-bottom: none; border-radius: 0 10px 0 0; }
+        .corner.bl { bottom: -10px; left: -10px; border-right: none; border-top: none; border-radius: 0 0 0 10px; }
+        .corner.br { bottom: -10px; right: -10px; border-left: none; border-top: none; border-radius: 0 0 10px 0; }
+
+        @keyframes cornerPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Scan Laser */
+        .scan-laser {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 260px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #3EB5F8, #fff, #3EB5F8, transparent);
+            box-shadow: 0 0 20px #3EB5F8, 0 0 40px rgba(62,181,248,0.5);
+            opacity: 0;
+            z-index: 15;
+        }
+
+        /* Secured Badge */
+        .secured-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, #2ECC71, #27AE60);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 10px 30px rgba(46,204,113,0.4);
+            z-index: 20;
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+
+        .secured-badge.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* Vault Icon */
+        .vault-icon {
+            position: absolute;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #3EB5F8, #2D8BC9);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(62,181,248,0.4);
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .vault-icon svg {
+            width: 36px;
+            height: 36px;
+            fill: white;
+        }
+
+        .vault-icon.pulse {
+            animation: vaultPulse 0.5s ease;
+        }
+
+        @keyframes vaultPulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.2); box-shadow: 0 10px 40px rgba(62,181,248,0.6); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+
+        /* Status text */
+        .status-text {
+            position: absolute;
+            bottom: -130px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .status-text.show {
+            opacity: 1;
+        }
+
+        /* Bottom Section */
+        .bottom-section {
+            width: 100%;
+            padding: 20px;
+            padding-bottom: 30px;
+            text-align: center;
+            z-index: 10;
+            position: relative;
+        }
+
+        /* Shutter Button */
+        .shutter-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .sonar-pulse {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50px;
+            background: rgba(62,181,248,0.3);
+            animation: sonarPulse 2s ease-out infinite;
+        }
+
+        .sonar-pulse:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        @keyframes sonarPulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+            100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+        }
+
+        .shutter-button {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 40px;
+            background: linear-gradient(135deg, #3EB5F8, #2D8BC9);
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50px;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow:
+                0 8px 25px rgba(62,181,248,0.5),
+                inset 0 2px 0 rgba(255,255,255,0.2);
+            z-index: 5;
+        }
+
+        .shutter-icon {
+            width: 28px;
+            height: 28px;
+            border: 3px solid white;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .shutter-icon::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        /* Hand cursor */
+        .hand-cursor {
+            position: absolute;
+            bottom: 90px;
+            right: 60px;
+            width: 50px;
+            height: 60px;
+            z-index: 20;
+            animation: handMove 1.5s ease-in-out infinite;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+        }
+
+        @keyframes handMove {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* ========== SCREEN 2: CTA ========== */
+        .cta-screen {
+            background: linear-gradient(180deg, #3AAFE9 0%, #2D8BC9 100%);
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .app-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            margin-bottom: 20px;
+        }
+
+        .app-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .cta-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+
+        .cta-subtitle {
+            font-size: 15px;
+            color: rgba(255,255,255,0.85);
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .feature-list {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .feature-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 28px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 50px;
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .install-btn {
+            width: 85%;
+            max-width: 280px;
+            padding: 18px 32px;
+            background: linear-gradient(135deg, #2ECC71 0%, #27AE60 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(46,204,113,0.4);
+            animation: pulse-btn 0.8s ease-in-out infinite;
+        }
+
+        @keyframes pulse-btn {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        .store-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            margin-top: 16px;
+        }
+
+        .store-badge svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Card flying animation */
+        .id-card.flying {
+            animation: cardFlyToVault 0.8s ease-in forwards;
+        }
+
+        @keyframes cardFlyToVault {
+            0% {
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, 250%) scale(0.2) rotate(10deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Screen 1: ID Scan -->
+    <div class="screen scan-screen active" id="screen1">
+        <div class="bg-image"></div>
+        <div class="vignette"></div>
+
+        <div class="header">
+            <h1 class="headline">Digitize Your ID</h1>
+            <p class="subheadline">Scan & store securely</p>
+        </div>
+
+        <div class="card-area">
+            <div class="card-container">
+                <!-- ID Card -->
+                <div class="id-card" id="idCard">
+                    <div class="card-header"></div>
+                    <div class="card-body">
+                        <div class="card-photo"></div>
+                        <div class="card-info">
+                            <div class="card-line"></div>
+                            <div class="card-line"></div>
+                            <div class="card-line"></div>
+                            <div class="card-line"></div>
+                        </div>
+                    </div>
+                    <div class="card-chip">
+                        <div class="chip-lines"></div>
+                    </div>
+                </div>
+
+                <!-- Scanner Frame -->
+                <div class="scanner-frame">
+                    <div class="corner tl"></div>
+                    <div class="corner tr"></div>
+                    <div class="corner bl"></div>
+                    <div class="corner br"></div>
+                </div>
+
+                <!-- Scan Laser -->
+                <div class="scan-laser" id="scanLaser"></div>
+
+                <!-- Secured Badge -->
+                <div class="secured-badge" id="securedBadge">
+                    <span>✓</span>
+                    <span>Secured!</span>
+                </div>
+
+                <!-- Vault Icon -->
+                <div class="vault-icon" id="vaultIcon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+                    </svg>
+                </div>
+
+                <!-- Status Text -->
+                <div class="status-text" id="statusText">1 ID Secured</div>
+            </div>
+        </div>
+
+        <div class="bottom-section">
+            <div class="shutter-container">
+                <div class="sonar-pulse"></div>
+                <div class="sonar-pulse"></div>
+                <div class="shutter-button" id="scanBtn">
+                    <div class="shutter-icon"></div>
+                    <span>Tap to Scan</span>
+                </div>
+            </div>
+
+            <!-- Vector Hand -->
+            <svg class="hand-cursor" id="handCursor" viewBox="0 0 60 72" fill="none">
+                <path d="M30 5 L30 25 L20 25 L20 45 L10 45 L10 55 L50 55 L50 45 L40 45 L40 25 L30 25" fill="#FFE0C0" stroke="#D4A574" stroke-width="2"/>
+                <path d="M25 30 L25 50" stroke="#D4A574" stroke-width="1.5" opacity="0.5"/>
+                <path d="M35 30 L35 50" stroke="#D4A574" stroke-width="1.5" opacity="0.5"/>
+                <ellipse cx="30" cy="8" rx="8" ry="6" fill="#FFE0C0" stroke="#D4A574" stroke-width="2"/>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Screen 2: CTA -->
+    <div class="screen cta-screen" id="screen2">
+        <div class="app-icon">
+            <img src="Assets/icon.png" alt="Tap Scanner">
+        </div>
+
+        <h1 class="cta-title">Tap Scanner</h1>
+        <p class="cta-subtitle">Your Digital ID Wallet</p>
+
+        <div class="feature-list">
+            <div class="feature-pill">🔒 Secure ID Storage</div>
+            <div class="feature-pill">📷 Smart Card Scanner</div>
+            <div class="feature-pill">🔐 Password Protected</div>
+        </div>
+
+        <button class="install-btn" onclick="ExitApi.exit()">Install Now</button>
+        <div class="store-badge">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/>
+            </svg>
+            Google Play
+        </div>
+    </div>
+
+    <script>
+        var currentScreen = 1;
+        var scanning = false;
+
+        document.body.addEventListener('click', function() {
+            if (currentScreen === 1 && !scanning) {
+                scanning = true;
+                runScanAnimation();
+            } else if (currentScreen === 2) {
+                ExitApi.exit();
+            }
+        });
+
+        function showScreen(num) {
+            var currentEl = document.getElementById('screen' + currentScreen);
+            var nextEl = document.getElementById('screen' + num);
+
+            currentEl.classList.remove('active');
+
+            setTimeout(function() {
+                nextEl.classList.add('active');
+            }, 300);
+
+            currentScreen = num;
+        }
+
+        function runScanAnimation() {
+            var card = document.getElementById('idCard');
+            var laser = document.getElementById('scanLaser');
+            var badge = document.getElementById('securedBadge');
+            var vault = document.getElementById('vaultIcon');
+            var status = document.getElementById('statusText');
+            var hand = document.getElementById('handCursor');
+
+            // Hide hand
+            hand.style.display = 'none';
+
+            // Stop card floating
+            card.style.animation = 'none';
+
+            // Step 1: Show laser and scan
+            setTimeout(function() {
+                laser.style.opacity = '1';
+                laser.style.transition = 'top 1.2s ease-in-out';
+                laser.style.top = '0';
+
+                setTimeout(function() {
+                    laser.style.top = '160px';
+                }, 100);
+            }, 200);
+
+            // Step 2: Hide laser, show secured badge
+            setTimeout(function() {
+                laser.style.opacity = '0';
+                badge.classList.add('show');
+            }, 1500);
+
+            // Step 3: Hide badge, fly card to vault
+            setTimeout(function() {
+                badge.classList.remove('show');
+                card.classList.add('flying');
+
+                // Pulse vault
+                setTimeout(function() {
+                    vault.classList.add('pulse');
+                    status.classList.add('show');
+                }, 600);
+            }, 2300);
+
+            // Step 4: Go to CTA
+            setTimeout(function() {
+                showScreen(2);
+            }, 3800);
+        }
+    </script>
+</body>
+</html>
