@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="ad.size" content="width=320,height=480">
+    <meta name="ad.orientation" content="portrait">
+    <title>PhotoBoost - Old Photo Repair</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1512 0%, #2d2520 50%, #1a1512 100%);
+        }
+
+        .container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Warm vintage mesh gradient corners */
+        .mesh-gradient {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .mesh-1 {
+            top: -80px;
+            left: -80px;
+            background: radial-gradient(circle, #8B4513 0%, transparent 70%);
+        }
+
+        .mesh-2 {
+            bottom: -80px;
+            right: -80px;
+            background: radial-gradient(circle, #D2691E 0%, transparent 70%);
+        }
+
+        .mesh-3 {
+            top: 50%;
+            right: -100px;
+            background: radial-gradient(circle, #CD853F 0%, transparent 70%);
+        }
+
+        /* Header */
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 400;
+        }
+
+        /* Slider Container - responsive */
+        .slider-container {
+            position: relative;
+            width: min(320px, 90vw);
+            height: min(480px, 70vh);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow:
+                0 0 0 1px rgba(210,105,30,0.3),
+                0 20px 60px rgba(0,0,0,0.5),
+                0 0 40px rgba(139,69,19,0.2);
+        }
+
+        /* Full screen mode for Google Ads */
+        @media (max-width: 360px) and (max-height: 640px) {
+            .slider-container {
+                width: 100vw;
+                height: 100vh;
+                border-radius: 0;
+            }
+            .header { top: 10px; }
+            .instruction { bottom: 20px; }
+        }
+
+        /* Background blur layer */
+        .bg-blur {
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+            background-image: url('Assets/after.png');
+            background-size: cover;
+            background-position: center;
+            filter: blur(30px) brightness(0.4);
+            transform: scale(1.1);
+        }
+
+        /* Before image (full, underneath) */
+        .before-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .before-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* After image (clipped, on top) */
+        .after-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .after-image {
+            width: 200%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Slider line with restoration beam effect */
+        .slider-line {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg,
+                transparent 0%,
+                rgba(210,105,30,0.3) 10%,
+                rgba(255,215,0,0.9) 30%,
+                #fff 50%,
+                rgba(255,215,0,0.9) 70%,
+                rgba(210,105,30,0.3) 90%,
+                transparent 100%
+            );
+            transform: translateX(-50%);
+            box-shadow:
+                0 0 20px rgba(255,215,0,0.6),
+                0 0 40px rgba(210,105,30,0.4);
+            z-index: 5;
+        }
+
+        /* Restoration scan effect */
+        .restoration-scan {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 60px;
+            height: 100%;
+            background: linear-gradient(90deg,
+                rgba(255,215,0,0.15) 0%,
+                rgba(255,215,0,0.05) 50%,
+                transparent 100%
+            );
+            transform: translateX(-50%);
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        /* Slider handle - vintage restoration orb */
+        .slider-handle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 56px;
+            height: 56px;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            cursor: grab;
+        }
+
+        .handle-outer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(45,37,32,0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,215,0,0.4);
+            box-shadow:
+                0 0 30px rgba(255,215,0,0.3),
+                inset 0 0 20px rgba(255,215,0,0.1);
+            animation: vintageGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes vintageGlow {
+            0%, 100% {
+                box-shadow:
+                    0 0 30px rgba(255,215,0,0.3),
+                    inset 0 0 20px rgba(255,215,0,0.1);
+                border-color: rgba(255,215,0,0.4);
+            }
+            50% {
+                box-shadow:
+                    0 0 50px rgba(255,215,0,0.5),
+                    inset 0 0 30px rgba(255,215,0,0.2);
+                border-color: rgba(255,215,0,0.7);
+            }
+        }
+
+        .handle-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FFD700 0%, #D2691E 50%, #8B4513 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .handle-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .handle-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: #1a1512;
+        }
+
+        /* Labels */
+        .label {
+            position: absolute;
+            bottom: 20px;
+            padding: 6px 14px;
+            background: rgba(45,37,32,0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(255,215,0,0.2);
+            z-index: 6;
+            transition: all 0.3s ease;
+        }
+
+        .label-before {
+            right: 15px;
+        }
+
+        .label-after {
+            left: 15px;
+        }
+
+        /* Restoration sparkles */
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #FFD700;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 8;
+        }
+
+        @keyframes sparkleAnim {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1) rotate(180deg); opacity: 0.8; }
+            100% { transform: scale(0) rotate(360deg); opacity: 0; }
+        }
+
+        /* Instruction text */
+        .instruction {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background: rgba(45,37,32,0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 25px;
+            border: 1px solid rgba(255,215,0,0.3);
+            z-index: 20;
+            animation: floatInstruction 2s ease-in-out infinite;
+        }
+
+        .instruction span {
+            font-size: 13px;
+            font-weight: 500;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .instruction svg {
+            width: 18px;
+            height: 18px;
+            fill: #FFD700;
+            animation: slideArrows 1s ease-in-out infinite;
+        }
+
+        @keyframes floatInstruction {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-5px); }
+        }
+
+        @keyframes slideArrows {
+            0%, 100% { transform: scaleX(1); }
+            50% { transform: scaleX(1.2); }
+        }
+
+        /* CTA Screen */
+        .cta-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1512 0%, #2d2520 50%, #1a1512 100%);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            z-index: 100;
+            display: none;
+        }
+
+        .cta-screen.active {
+            display: flex;
+        }
+
+        /* Floating app icon */
+        .app-icon-container {
+            position: relative;
+            margin-bottom: 20px;
+            animation: floatIcon 3s ease-in-out infinite;
+        }
+
+        @keyframes floatIcon {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .app-icon-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255,215,0,0.4) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+            50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.3; }
+        }
+
+        .app-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Hero frame */
+        .hero-frame {
+            position: relative;
+            margin-bottom: 24px;
+            transform: perspective(800px) rotateY(-5deg) rotateX(2deg);
+            transition: transform 0.3s ease;
+        }
+
+        .hero-frame:hover {
+            transform: perspective(800px) rotateY(0deg) rotateX(0deg);
+        }
+
+        .hero-image {
+            width: 180px;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow:
+                0 20px 50px rgba(0,0,0,0.5),
+                0 0 0 1px rgba(255,215,0,0.2);
+        }
+
+        .hero-badge {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 16px;
+            background: linear-gradient(135deg, #FFD700 0%, #D2691E 100%);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #1a1512;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(255,215,0,0.4);
+        }
+
+        /* CTA Title */
+        .cta-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+
+        .cta-subtitle {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Feature grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 24px;
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .feature-tile {
+            padding: 12px 10px;
+            background: rgba(45,37,32,0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(255,215,0,0.15);
+            text-align: center;
+        }
+
+        .feature-tile .icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .feature-tile .text {
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
+
+        /* Install button */
+        .install-btn {
+            position: relative;
+            padding: 16px 50px;
+            background: linear-gradient(135deg, #FFD700 0%, #D2691E 100%);
+            border: none;
+            border-radius: 30px;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1512;
+            cursor: pointer;
+            overflow: hidden;
+            box-shadow:
+                0 10px 30px rgba(255,215,0,0.3),
+                0 0 0 1px rgba(255,255,255,0.1) inset;
+            transition: all 0.3s ease;
+        }
+
+        .install-btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-shimmer {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255,255,255,0.4) 50%,
+                transparent 100%
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .btn-text {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Mesh gradients -->
+        <div class="mesh-gradient mesh-1"></div>
+        <div class="mesh-gradient mesh-2"></div>
+        <div class="mesh-gradient mesh-3"></div>
+
+        <!-- Header -->
+        <div class="header">
+            <h1>✨ Restore Old Photos</h1>
+            <p>AI-powered photo repair</p>
+        </div>
+
+        <!-- Slider -->
+        <div class="slider-container" id="sliderContainer">
+            <div class="bg-blur"></div>
+
+            <!-- After (restored) - underneath, full width -->
+            <div class="before-container">
+                <img src="Assets/after.png" alt="Restored" class="before-image" draggable="false">
+            </div>
+
+            <!-- Before (damaged) - on top, clipped from left -->
+            <div class="after-container" id="afterContainer">
+                <img src="Assets/before.png" alt="Damaged" class="after-image" draggable="false">
+            </div>
+
+            <!-- Restoration scan effect -->
+            <div class="restoration-scan" id="restorationScan"></div>
+
+            <!-- Slider line -->
+            <div class="slider-line" id="sliderLine"></div>
+
+            <!-- Slider handle -->
+            <div class="slider-handle" id="sliderHandle">
+                <div class="handle-outer"></div>
+                <div class="handle-inner">
+                    <div class="handle-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                            <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z" transform="rotate(180 12 12)"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Labels -->
+            <div class="label label-after" id="labelAfter">Damaged</div>
+            <div class="label label-before" id="labelBefore">Restored</div>
+        </div>
+
+        <!-- Instruction -->
+        <div class="instruction" id="instruction">
+            <span>
+                <svg viewBox="0 0 24 24">
+                    <path d="M6.41 6L5 7.41 9.58 12 5 16.59 6.41 18l6-6z"/>
+                    <path d="M12.41 6L11 7.41 15.58 12 11 16.59 12.41 18l6-6z"/>
+                </svg>
+                Slide to Restore
+                <svg viewBox="0 0 24 24" style="transform: rotate(180deg)">
+                    <path d="M6.41 6L5 7.41 9.58 12 5 16.59 6.41 18l6-6z"/>
+                    <path d="M12.41 6L11 7.41 15.58 12 11 16.59 12.41 18l6-6z"/>
+                </svg>
+            </span>
+        </div>
+
+        <!-- CTA Screen -->
+        <div class="cta-screen" id="ctaScreen">
+            <div class="mesh-gradient mesh-1"></div>
+            <div class="mesh-gradient mesh-2"></div>
+
+            <div class="app-icon-container">
+                <div class="app-icon-glow"></div>
+                <img src="Assets/Icon.png" alt="PhotoBoost" class="app-icon">
+            </div>
+
+            <div class="hero-frame">
+                <img src="Assets/after.png" alt="Restored Photo" class="hero-image">
+                <div class="hero-badge">✨ Restored</div>
+            </div>
+
+            <h2 class="cta-title">Bring Photos Back to Life</h2>
+            <p class="cta-subtitle">Restore precious memories in seconds</p>
+
+            <div class="feature-grid">
+                <div class="feature-tile">
+                    <div class="icon">🔧</div>
+                    <div class="text">Scratch Repair</div>
+                </div>
+                <div class="feature-tile">
+                    <div class="icon">🎨</div>
+                    <div class="text">Colorize B&W</div>
+                </div>
+                <div class="feature-tile">
+                    <div class="icon">✨</div>
+                    <div class="text">Face Restore</div>
+                </div>
+                <div class="feature-tile">
+                    <div class="icon">📸</div>
+                    <div class="text">HD Upscale</div>
+                </div>
+            </div>
+
+            <button class="install-btn" id="installBtn">
+                <div class="btn-shimmer"></div>
+                <span class="btn-text">Restore Now — Free</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Sparkles container -->
+    <div id="sparklesContainer"></div>
+
+    <script>
+        // ExitAPI for Google Ads
+        var defined = () => typeof ExitApi !== 'undefined';
+        var ExitHandler = function() {
+            if (defined()) { ExitApi.exit(); }
+            else { window.open('https://play.google.com/store', '_blank'); }
+        };
+
+        // Elements
+        const sliderContainer = document.getElementById('sliderContainer');
+        const afterContainer = document.getElementById('afterContainer');
+        const sliderLine = document.getElementById('sliderLine');
+        const sliderHandle = document.getElementById('sliderHandle');
+        const restorationScan = document.getElementById('restorationScan');
+        const labelBefore = document.getElementById('labelBefore');
+        const labelAfter = document.getElementById('labelAfter');
+        const instruction = document.getElementById('instruction');
+        const ctaScreen = document.getElementById('ctaScreen');
+        const installBtn = document.getElementById('installBtn');
+        const sparklesContainer = document.getElementById('sparklesContainer');
+
+        // State
+        let isDragging = false;
+        let sliderWidth = 320;
+        let currentPercent = 0.5; // Start at 50%
+        let hasInteracted = false;
+        let ctaTimer = null;
+        const CTA_DELAY = 3000;
+
+        // Initialize
+        function init() {
+            sliderWidth = sliderContainer.offsetWidth || 320;
+            updateSliderByPercent(currentPercent);
+        }
+
+        // Update slider by percentage (0-1)
+        function updateSliderByPercent(percent) {
+            percent = Math.max(0.05, Math.min(0.95, percent));
+            currentPercent = percent;
+
+            const x = percent * sliderWidth;
+
+            afterContainer.style.width = (percent * 100) + '%';
+            sliderLine.style.left = (percent * 100) + '%';
+            sliderHandle.style.left = (percent * 100) + '%';
+            restorationScan.style.left = (percent * 100) + '%';
+
+            // Update labels
+            labelAfter.style.opacity = percent > 0.2 ? 1 : 0;
+            labelBefore.style.opacity = percent < 0.8 ? 1 : 0;
+        }
+
+        // Update slider position (for drag events)
+        function updateSlider(x) {
+            const percent = x / sliderWidth;
+            updateSliderByPercent(percent);
+        }
+
+        // Create sparkle effect
+        function createSparkle(x, y) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = x + 'px';
+            sparkle.style.top = y + 'px';
+            sparkle.style.animation = 'sparkleAnim 0.6s ease-out forwards';
+            sparklesContainer.appendChild(sparkle);
+            setTimeout(() => sparkle.remove(), 600);
+        }
+
+        // Handle interaction start
+        function handleStart(e) {
+            e.preventDefault();
+            isDragging = true;
+            sliderHandle.style.cursor = 'grabbing';
+
+            if (!hasInteracted) {
+                hasInteracted = true;
+                instruction.style.opacity = '0';
+                setTimeout(() => instruction.style.display = 'none', 300);
+
+                // Start CTA timer
+                ctaTimer = setTimeout(() => {
+                    showCTA();
+                }, CTA_DELAY);
+            }
+        }
+
+        // Handle movement
+        function handleMove(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+
+            const rect = sliderContainer.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const x = clientX - rect.left;
+
+            updateSlider(x);
+
+            // Sparkles along slider line
+            if (Math.random() > 0.6) {
+                const sparkleY = rect.top + Math.random() * rect.height;
+                createSparkle(clientX, sparkleY);
+            }
+        }
+
+        // Handle interaction end
+        function handleEnd() {
+            isDragging = false;
+            sliderHandle.style.cursor = 'grab';
+        }
+
+        // Show CTA
+        function showCTA() {
+            ctaScreen.classList.add('active');
+        }
+
+        // Event listeners
+        sliderContainer.addEventListener('mousedown', handleStart);
+        sliderContainer.addEventListener('touchstart', handleStart, { passive: false });
+
+        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('touchmove', handleMove, { passive: false });
+
+        document.addEventListener('mouseup', handleEnd);
+        document.addEventListener('touchend', handleEnd);
+
+        // Install button
+        installBtn.addEventListener('click', ExitHandler);
+        installBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            ExitHandler();
+        });
+
+        // Initialize
+        init();
+        window.addEventListener('resize', init);
+    </script>
+</body>
+</html>
