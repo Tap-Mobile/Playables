@@ -6,143 +6,161 @@
     <meta name="ad.size" content="width=320,height=480">
     <meta name="ad.orientation" content="portrait">
     <title>PhotoBoost - Old Photo Repair</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
 
         html, body {
             width: 100%;
             height: 100%;
-            overflow: hidden;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #1a1512 0%, #2d2520 50%, #1a1512 100%);
+            background: #1a1512;
+            overflow: hidden;
+            touch-action: manipulation;
         }
 
         .container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Dynamic Background - Blurred After Image */
+        .bg-layer {
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            width: calc(100% + 40px);
+            height: calc(100% + 40px);
+            background: url('Assets/after.png') center/cover no-repeat;
+            filter: blur(30px) brightness(0.3);
+            z-index: 0;
+        }
+
+        .bg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(26, 21, 18, 0.85) 0%, rgba(45, 37, 32, 0.9) 100%);
+            z-index: 1;
+        }
+
+        /* Mesh gradient corners - warm vintage */
+        .mesh-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 0% 0%, rgba(139, 69, 19, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 100% 100%, rgba(210, 105, 30, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 100% 0%, rgba(205, 133, 63, 0.1) 0%, transparent 40%),
+                radial-gradient(ellipse at 0% 100%, rgba(139, 69, 19, 0.1) 0%, transparent 40%);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* Screens */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            position: relative;
-            overflow: hidden;
+            z-index: 10;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.6s ease, transform 0.6s ease;
         }
 
-        /* Warm vintage mesh gradient corners */
-        .mesh-gradient {
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            filter: blur(60px);
-            opacity: 0.4;
+        .screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(1.1);
             pointer-events: none;
+            display: none;
         }
 
-        .mesh-1 {
-            top: -80px;
-            left: -80px;
-            background: radial-gradient(circle, #8B4513 0%, transparent 70%);
+        /* Screen 1: Slider */
+        #screen1 {
+            padding: 15px;
         }
 
-        .mesh-2 {
-            bottom: -80px;
-            right: -80px;
-            background: radial-gradient(circle, #D2691E 0%, transparent 70%);
-        }
-
-        .mesh-3 {
-            top: 50%;
-            right: -100px;
-            background: radial-gradient(circle, #CD853F 0%, transparent 70%);
-        }
-
-        /* Header */
-        .header {
-            position: absolute;
-            top: 20px;
-            left: 0;
-            right: 0;
+        .title-area {
             text-align: center;
+            margin-bottom: 15px;
             z-index: 10;
         }
 
-        .header h1 {
-            font-size: 18px;
+        .main-title {
+            font-size: 24px;
             font-weight: 700;
             color: #fff;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
         }
 
-        .header p {
-            font-size: 12px;
-            color: rgba(255,255,255,0.7);
+        .main-title span {
+            background: linear-gradient(135deg, #FFD700, #D2691E);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 14px;
             font-weight: 400;
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 0.3px;
         }
 
-        /* Slider Container - responsive */
+        /* Slider Container with Glow Border */
+        .slider-wrapper {
+            position: relative;
+            padding: 3px;
+            border-radius: 27px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.5), rgba(210, 105, 30, 0.3), rgba(255, 215, 0, 0.5));
+            box-shadow:
+                0 0 40px rgba(255, 215, 0, 0.2),
+                0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
         .slider-container {
             position: relative;
-            width: min(320px, 90vw);
-            height: min(480px, 70vh);
-            border-radius: 20px;
+            width: 320px;
+            height: 480px;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow:
-                0 0 0 1px rgba(210,105,30,0.3),
-                0 20px 60px rgba(0,0,0,0.5),
-                0 0 40px rgba(139,69,19,0.2);
+            cursor: ew-resize;
+            background: #111;
         }
 
-        /* Full screen mode for Google Ads */
-        @media (max-width: 360px) and (max-height: 640px) {
-            .slider-container {
-                width: 100vw;
-                height: 100vh;
-                border-radius: 0;
-            }
-            .header { top: 10px; }
-            .instruction { bottom: 20px; }
-        }
-
-        /* Background blur layer */
-        .bg-blur {
-            position: absolute;
-            top: -20px;
-            left: -20px;
-            right: -20px;
-            bottom: -20px;
-            background-image: url('Assets/after.png');
-            background-size: cover;
-            background-position: center;
-            filter: blur(30px) brightness(0.4);
-            transform: scale(1.1);
-        }
-
-        /* Before image (full, underneath) */
-        .before-container {
+        /* After image - full width background (RESTORED) */
+        .before-image {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-        }
-
-        .before-image {
-            width: 100%;
-            height: 100%;
             object-fit: cover;
+            z-index: 1;
         }
 
-        /* After image (clipped, on top) */
+        /* Before container - clips the before image (DAMAGED) */
         .after-container {
             position: absolute;
             top: 0;
@@ -150,155 +168,141 @@
             width: 50%;
             height: 100%;
             overflow: hidden;
+            z-index: 2;
         }
 
         .after-image {
-            width: 200%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 320px;
             height: 100%;
             object-fit: cover;
         }
 
-        /* Slider line with restoration beam effect */
-        .slider-line {
+        /* Dynamic Labels */
+        .slider-label {
             position: absolute;
-            top: 0;
-            left: 50%;
-            width: 3px;
-            height: 100%;
-            background: linear-gradient(180deg,
-                transparent 0%,
-                rgba(210,105,30,0.3) 10%,
-                rgba(255,215,0,0.9) 30%,
-                #fff 50%,
-                rgba(255,215,0,0.9) 70%,
-                rgba(210,105,30,0.3) 90%,
-                transparent 100%
-            );
-            transform: translateX(-50%);
-            box-shadow:
-                0 0 20px rgba(255,215,0,0.6),
-                0 0 40px rgba(210,105,30,0.4);
-            z-index: 5;
-        }
-
-        /* Restoration scan effect */
-        .restoration-scan {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            width: 60px;
-            height: 100%;
-            background: linear-gradient(90deg,
-                rgba(255,215,0,0.15) 0%,
-                rgba(255,215,0,0.05) 50%,
-                transparent 100%
-            );
-            transform: translateX(-50%);
-            pointer-events: none;
-            z-index: 4;
-        }
-
-        /* Slider handle - vintage restoration orb */
-        .slider-handle {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 56px;
-            height: 56px;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-            cursor: grab;
-        }
-
-        .handle-outer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: rgba(45,37,32,0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,215,0,0.4);
-            box-shadow:
-                0 0 30px rgba(255,215,0,0.3),
-                inset 0 0 20px rgba(255,215,0,0.1);
-            animation: vintageGlow 2s ease-in-out infinite;
-        }
-
-        @keyframes vintageGlow {
-            0%, 100% {
-                box-shadow:
-                    0 0 30px rgba(255,215,0,0.3),
-                    inset 0 0 20px rgba(255,215,0,0.1);
-                border-color: rgba(255,215,0,0.4);
-            }
-            50% {
-                box-shadow:
-                    0 0 50px rgba(255,215,0,0.5),
-                    inset 0 0 30px rgba(255,215,0,0.2);
-                border-color: rgba(255,215,0,0.7);
-            }
-        }
-
-        .handle-inner {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #FFD700 0%, #D2691E 50%, #8B4513 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
-        .handle-icon {
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .handle-icon svg {
-            width: 100%;
-            height: 100%;
-            fill: #1a1512;
-        }
-
-        /* Labels */
-        .label {
-            position: absolute;
-            bottom: 20px;
+            top: 16px;
             padding: 6px 14px;
-            background: rgba(45,37,32,0.7);
+            background: rgba(45, 37, 32, 0.7);
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border-radius: 20px;
             font-size: 11px;
             font-weight: 600;
             color: #fff;
+            z-index: 20;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border: 1px solid rgba(255,215,0,0.2);
-            z-index: 6;
-            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            transition: opacity 0.3s ease;
+            border: 1px solid rgba(255, 215, 0, 0.2);
         }
 
         .label-before {
-            right: 15px;
+            left: 16px;
         }
 
         .label-after {
-            left: 15px;
+            right: 16px;
         }
 
-        /* Restoration sparkles */
+        /* Liquid Light Slider Handle - golden */
+        .slider-handle {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg,
+                rgba(255, 215, 0, 0.3) 0%,
+                rgba(255, 215, 0, 1) 20%,
+                rgba(210, 105, 30, 1) 50%,
+                rgba(139, 69, 19, 1) 80%,
+                rgba(139, 69, 19, 0.3) 100%
+            );
+            z-index: 15;
+            box-shadow:
+                0 0 20px rgba(255, 215, 0, 0.8),
+                0 0 40px rgba(255, 215, 0, 0.4);
+        }
+
+        /* Frosted Glass Handle Circle */
+        .handle-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 52px;
+            height: 52px;
+            background: rgba(45, 37, 32, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow:
+                0 0 30px rgba(255, 215, 0, 0.6),
+                inset 0 0 20px rgba(255, 215, 0, 0.2);
+            z-index: 16;
+        }
+
+        .handle-arrows {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 300;
+            letter-spacing: 6px;
+            margin-left: 3px;
+        }
+
+        /* Pulsing Neon Glow */
+        .handle-pulse {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            z-index: 14;
+            animation: handlePulse 2s ease-out infinite;
+        }
+
+        .handle-pulse:nth-child(2) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes handlePulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+        }
+
+        /* Scan Laser Effect */
+        .scan-laser {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(255, 215, 0, 0.8) 50%,
+                transparent 100%
+            );
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            animation: laserScan 2s ease-in-out infinite;
+            z-index: 17;
+        }
+
+        @keyframes laserScan {
+            0%, 100% { top: 10%; }
+            50% { top: 90%; }
+        }
+
+        /* Sparkle particles */
         .sparkle {
             position: absolute;
             width: 4px;
@@ -306,36 +310,26 @@
             background: #FFD700;
             border-radius: 50%;
             pointer-events: none;
+            z-index: 18;
             opacity: 0;
-            z-index: 8;
+            box-shadow: 0 0 6px #FFD700, 0 0 12px #FFD700;
+        }
+
+        .sparkle.active {
+            animation: sparkleAnim 0.6s ease-out forwards;
         }
 
         @keyframes sparkleAnim {
-            0% { transform: scale(0) rotate(0deg); opacity: 1; }
-            50% { transform: scale(1) rotate(180deg); opacity: 0.8; }
-            100% { transform: scale(0) rotate(360deg); opacity: 0; }
+            0% { opacity: 1; transform: scale(1) translate(0, 0); }
+            100% { opacity: 0; transform: scale(0) translate(var(--tx), var(--ty)); }
         }
 
-        /* Instruction text */
+        /* Instruction */
         .instruction {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            background: rgba(45,37,32,0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 25px;
-            border: 1px solid rgba(255,215,0,0.3);
-            z-index: 20;
-            animation: floatInstruction 2s ease-in-out infinite;
-        }
-
-        .instruction span {
+            margin-top: 15px;
             font-size: 13px;
             font-weight: 500;
-            color: #fff;
+            color: rgba(255,255,255,0.5);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -345,102 +339,89 @@
             width: 18px;
             height: 18px;
             fill: #FFD700;
-            animation: slideArrows 1s ease-in-out infinite;
         }
 
-        @keyframes floatInstruction {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-5px); }
+        /* ============================================ */
+        /* Screen 2: CTA */
+        /* ============================================ */
+        #screen2 {
+            padding: 20px;
         }
 
-        @keyframes slideArrows {
-            0%, 100% { transform: scaleX(1); }
-            50% { transform: scaleX(1.2); }
-        }
-
-        /* CTA Screen */
-        .cta-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1a1512 0%, #2d2520 50%, #1a1512 100%);
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 30px 20px;
-            z-index: 100;
-            display: none;
-        }
-
-        .cta-screen.active {
-            display: flex;
-        }
-
-        /* Floating app icon */
-        .app-icon-container {
+        /* Floating App Icon */
+        .app-icon-wrapper {
             position: relative;
-            margin-bottom: 20px;
-            animation: floatIcon 3s ease-in-out infinite;
+            margin-bottom: 15px;
         }
 
-        @keyframes floatIcon {
+        .app-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            object-fit: cover;
+            box-shadow:
+                0 10px 40px rgba(255, 215, 0, 0.4),
+                0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: iconFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes iconFloat {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-8px); }
         }
 
-        .app-icon-glow {
+        .icon-glow {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             width: 100px;
             height: 100px;
-            background: radial-gradient(circle, rgba(255,215,0,0.4) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.4) 0%, transparent 70%);
             border-radius: 50%;
-            animation: pulseGlow 2s ease-in-out infinite;
+            z-index: -1;
+            animation: glowPulse 2s ease-in-out infinite;
         }
 
-        @keyframes pulseGlow {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-            50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.3; }
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
         }
 
-        .app-icon {
-            width: 72px;
-            height: 72px;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        /* Hero Visual - Floating 3D Frame */
+        .hero-visual {
             position: relative;
-            z-index: 1;
+            margin-bottom: 20px;
+            perspective: 1000px;
         }
 
-        /* Hero frame */
         .hero-frame {
-            position: relative;
-            margin-bottom: 24px;
-            transform: perspective(800px) rotateY(-5deg) rotateX(2deg);
-            transition: transform 0.3s ease;
-        }
-
-        .hero-frame:hover {
-            transform: perspective(800px) rotateY(0deg) rotateX(0deg);
-        }
-
-        .hero-image {
-            width: 180px;
+            width: 160px;
             height: 220px;
-            object-fit: cover;
-            border-radius: 12px;
+            border-radius: 16px;
+            overflow: hidden;
+            transform: rotateY(-8deg) rotateX(5deg);
             box-shadow:
-                0 20px 50px rgba(0,0,0,0.5),
-                0 0 0 1px rgba(255,215,0,0.2);
+                0 30px 60px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                -20px 20px 40px rgba(255, 215, 0, 0.2);
+            animation: heroFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes heroFloat {
+            0%, 100% { transform: rotateY(-8deg) rotateX(5deg) translateY(0); }
+            50% { transform: rotateY(-5deg) rotateX(3deg) translateY(-10px); }
+        }
+
+        .hero-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .hero-badge {
             position: absolute;
-            bottom: -10px;
+            bottom: -12px;
             left: 50%;
             transform: translateX(-50%);
             padding: 6px 16px;
@@ -451,90 +432,110 @@
             color: #1a1512;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            box-shadow: 0 4px 15px rgba(255,215,0,0.4);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+            z-index: 10;
         }
 
-        /* CTA Title */
-        .cta-title {
+        /* Result text */
+        .result-title {
             font-size: 22px;
             font-weight: 700;
             color: #fff;
             text-align: center;
-            margin-bottom: 6px;
-            line-height: 1.2;
+            margin-bottom: 5px;
+            letter-spacing: -0.5px;
         }
 
-        .cta-subtitle {
-            font-size: 13px;
-            color: rgba(255,255,255,0.6);
+        .result-subtitle {
+            font-size: 12px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.5);
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
-        /* Feature grid */
+        /* Feature Grid - 2x2 Frosted Tiles */
         .feature-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-bottom: 24px;
             width: 100%;
             max-width: 280px;
+            margin-bottom: 18px;
         }
 
         .feature-tile {
-            padding: 12px 10px;
-            background: rgba(45,37,32,0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 12px;
-            border: 1px solid rgba(255,215,0,0.15);
+            background: rgba(45, 37, 32, 0.6);
+            backdrop-filter: blur(20px);
+            border-radius: 14px;
+            padding: 14px 10px;
+            border: 1px solid rgba(255, 215, 0, 0.15);
             text-align: center;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: tileIn 0.5s ease forwards;
         }
 
-        .feature-tile .icon {
-            font-size: 20px;
-            margin-bottom: 4px;
+        .feature-tile:nth-child(1) { animation-delay: 0.1s; }
+        .feature-tile:nth-child(2) { animation-delay: 0.2s; }
+        .feature-tile:nth-child(3) { animation-delay: 0.3s; }
+        .feature-tile:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes tileIn {
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .feature-tile .text {
+        .feature-tile-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+
+        .feature-tile-text {
             font-size: 10px;
             font-weight: 600;
-            color: rgba(255,255,255,0.9);
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.3;
         }
 
-        /* Install button */
+        /* Install Button - Premium */
         .install-btn {
-            position: relative;
-            padding: 16px 50px;
+            width: 100%;
+            max-width: 280px;
+            padding: 16px 20px;
             background: linear-gradient(135deg, #FFD700 0%, #D2691E 100%);
             border: none;
-            border-radius: 30px;
-            font-family: 'Inter', sans-serif;
-            font-size: 16px;
-            font-weight: 700;
+            border-radius: 14px;
             color: #1a1512;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
             overflow: hidden;
             box-shadow:
-                0 10px 30px rgba(255,215,0,0.3),
-                0 0 0 1px rgba(255,255,255,0.1) inset;
-            transition: all 0.3s ease;
+                0 10px 40px rgba(255, 215, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .install-btn:active {
             transform: scale(0.98);
         }
 
-        .btn-shimmer {
+        .install-btn::before {
+            content: '';
             position: absolute;
             top: 0;
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(
-                90deg,
+            background: linear-gradient(90deg,
                 transparent 0%,
-                rgba(255,255,255,0.4) 50%,
+                rgba(255, 255, 255, 0.4) 50%,
                 transparent 100%
             );
             animation: shimmer 2s infinite;
@@ -545,261 +546,242 @@
             100% { left: 100%; }
         }
 
+        .btn-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            object-fit: cover;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
         .btn-text {
-            position: relative;
-            z-index: 1;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Mesh gradients -->
-        <div class="mesh-gradient mesh-1"></div>
-        <div class="mesh-gradient mesh-2"></div>
-        <div class="mesh-gradient mesh-3"></div>
+        <!-- Background Layers -->
+        <div class="bg-layer"></div>
+        <div class="bg-overlay"></div>
+        <div class="mesh-gradient"></div>
 
-        <!-- Header -->
-        <div class="header">
-            <h1>✨ Restore Old Photos</h1>
-            <p>AI-powered photo repair</p>
-        </div>
-
-        <!-- Slider -->
-        <div class="slider-container" id="sliderContainer">
-            <div class="bg-blur"></div>
-
-            <!-- After (restored) - underneath, full width -->
-            <div class="before-container">
-                <img src="Assets/after.png" alt="Restored" class="before-image" draggable="false">
+        <!-- Screen 1: Slider -->
+        <div class="screen" id="screen1">
+            <div class="title-area">
+                <h1 class="main-title">✨ <span>Restore</span> Old Photos</h1>
+                <p class="subtitle">AI-powered photo repair</p>
             </div>
 
-            <!-- Before (damaged) - on top, clipped from left -->
-            <div class="after-container" id="afterContainer">
-                <img src="Assets/before.png" alt="Damaged" class="after-image" draggable="false">
-            </div>
+            <div class="slider-wrapper">
+                <div class="slider-container" id="sliderContainer">
+                    <!-- Restored Image (Full Background - right side) -->
+                    <img src="Assets/after.png" alt="Restored" class="before-image">
 
-            <!-- Restoration scan effect -->
-            <div class="restoration-scan" id="restorationScan"></div>
-
-            <!-- Slider line -->
-            <div class="slider-line" id="sliderLine"></div>
-
-            <!-- Slider handle -->
-            <div class="slider-handle" id="sliderHandle">
-                <div class="handle-outer"></div>
-                <div class="handle-inner">
-                    <div class="handle-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
-                            <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z" transform="rotate(180 12 12)"/>
-                        </svg>
+                    <!-- Damaged Container (Clipped - left side) -->
+                    <div class="after-container" id="afterContainer">
+                        <img src="Assets/before.png" alt="Damaged" class="after-image" id="afterImage">
                     </div>
+
+                    <!-- Slider Handle -->
+                    <div class="slider-handle" id="sliderHandle">
+                        <div class="handle-pulse"></div>
+                        <div class="handle-pulse"></div>
+                        <div class="handle-circle">
+                            <span class="handle-arrows">‹›</span>
+                        </div>
+                        <div class="scan-laser"></div>
+                    </div>
+
+                    <!-- Dynamic Labels -->
+                    <span class="slider-label label-before" id="labelBefore">Damaged</span>
+                    <span class="slider-label label-after" id="labelAfter">Restored</span>
+
+                    <!-- Sparkles Container -->
+                    <div id="sparklesContainer"></div>
                 </div>
             </div>
 
-            <!-- Labels -->
-            <div class="label label-after" id="labelAfter">Damaged</div>
-            <div class="label label-before" id="labelBefore">Restored</div>
+            <div class="instruction">
+                <svg viewBox="0 0 24 24"><path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/></svg>
+                Slide to restore
+            </div>
         </div>
 
-        <!-- Instruction -->
-        <div class="instruction" id="instruction">
-            <span>
-                <svg viewBox="0 0 24 24">
-                    <path d="M6.41 6L5 7.41 9.58 12 5 16.59 6.41 18l6-6z"/>
-                    <path d="M12.41 6L11 7.41 15.58 12 11 16.59 12.41 18l6-6z"/>
-                </svg>
-                Slide to Restore
-                <svg viewBox="0 0 24 24" style="transform: rotate(180deg)">
-                    <path d="M6.41 6L5 7.41 9.58 12 5 16.59 6.41 18l6-6z"/>
-                    <path d="M12.41 6L11 7.41 15.58 12 11 16.59 12.41 18l6-6z"/>
-                </svg>
-            </span>
-        </div>
-
-        <!-- CTA Screen -->
-        <div class="cta-screen" id="ctaScreen">
-            <div class="mesh-gradient mesh-1"></div>
-            <div class="mesh-gradient mesh-2"></div>
-
-            <div class="app-icon-container">
-                <div class="app-icon-glow"></div>
+        <!-- Screen 2: CTA -->
+        <div class="screen hidden" id="screen2">
+            <!-- Floating App Icon -->
+            <div class="app-icon-wrapper">
+                <div class="icon-glow"></div>
                 <img src="Assets/Icon.png" alt="PhotoBoost" class="app-icon">
             </div>
 
-            <div class="hero-frame">
-                <img src="Assets/after.png" alt="Restored Photo" class="hero-image">
+            <!-- Hero Visual - Floating 3D Frame -->
+            <div class="hero-visual">
+                <div class="hero-frame">
+                    <img src="Assets/after.png" alt="Restored Photo">
+                </div>
                 <div class="hero-badge">✨ Restored</div>
             </div>
 
-            <h2 class="cta-title">Bring Photos Back to Life</h2>
-            <p class="cta-subtitle">Restore precious memories in seconds</p>
+            <h2 class="result-title">Photo Restored! ✨</h2>
+            <p class="result-subtitle">Bring memories back to life</p>
 
+            <!-- Feature Grid 2x2 -->
             <div class="feature-grid">
                 <div class="feature-tile">
-                    <div class="icon">🔧</div>
-                    <div class="text">Scratch Repair</div>
+                    <div class="feature-tile-icon">🔧</div>
+                    <div class="feature-tile-text">Scratch Repair</div>
                 </div>
                 <div class="feature-tile">
-                    <div class="icon">🎨</div>
-                    <div class="text">Colorize B&W</div>
+                    <div class="feature-tile-icon">🎨</div>
+                    <div class="feature-tile-text">Colorize B&W</div>
                 </div>
                 <div class="feature-tile">
-                    <div class="icon">✨</div>
-                    <div class="text">Face Restore</div>
+                    <div class="feature-tile-icon">✨</div>
+                    <div class="feature-tile-text">Face Restore</div>
                 </div>
                 <div class="feature-tile">
-                    <div class="icon">📸</div>
-                    <div class="text">HD Upscale</div>
+                    <div class="feature-tile-icon">📸</div>
+                    <div class="feature-tile-text">HD Upscale</div>
                 </div>
             </div>
 
+            <!-- Premium Install Button -->
             <button class="install-btn" id="installBtn">
-                <div class="btn-shimmer"></div>
-                <span class="btn-text">Restore Now — Free</span>
+                <img src="Assets/Icon.png" alt="" class="btn-icon">
+                <span class="btn-text">RESTORE NOW — FREE</span>
             </button>
         </div>
     </div>
 
-    <!-- Sparkles container -->
-    <div id="sparklesContainer"></div>
-
     <script>
         // ExitAPI for Google Ads
-        var defined = () => typeof ExitApi !== 'undefined';
-        var ExitHandler = function() {
-            if (defined()) { ExitApi.exit(); }
-            else { window.open('https://play.google.com/store', '_blank'); }
+        var defined = function() {
+            return typeof ExitApi !== 'undefined';
+        };
+
+        var clickOut = function() {
+            if (defined()) {
+                ExitApi.exit();
+            } else {
+                window.open('https://play.google.com/store/apps/details?id=tap.photo.boost.restoration', '_blank');
+            }
         };
 
         // Elements
         const sliderContainer = document.getElementById('sliderContainer');
         const afterContainer = document.getElementById('afterContainer');
-        const sliderLine = document.getElementById('sliderLine');
+        const afterImage = document.getElementById('afterImage');
         const sliderHandle = document.getElementById('sliderHandle');
-        const restorationScan = document.getElementById('restorationScan');
         const labelBefore = document.getElementById('labelBefore');
         const labelAfter = document.getElementById('labelAfter');
-        const instruction = document.getElementById('instruction');
-        const ctaScreen = document.getElementById('ctaScreen');
-        const installBtn = document.getElementById('installBtn');
         const sparklesContainer = document.getElementById('sparklesContainer');
+        const screen1 = document.getElementById('screen1');
+        const screen2 = document.getElementById('screen2');
+        const installBtn = document.getElementById('installBtn');
 
-        // State
         let isDragging = false;
-        let sliderWidth = 320;
-        let currentPercent = 0.5; // Start at 50%
         let hasInteracted = false;
+        let sliderPosition = 50;
+        const containerWidth = 320;
         let ctaTimer = null;
-        const CTA_DELAY = 3000;
+        const CTA_DELAY = 3000; // Show CTA 3 seconds after first touch
 
-        // Initialize
-        function init() {
-            sliderWidth = sliderContainer.offsetWidth || 320;
-            updateSliderByPercent(currentPercent);
-        }
+        // Update slider position
+        function updateSlider(percent) {
+            percent = Math.max(5, Math.min(95, percent));
+            sliderPosition = percent;
 
-        // Update slider by percentage (0-1)
-        function updateSliderByPercent(percent) {
-            percent = Math.max(0.05, Math.min(0.95, percent));
-            currentPercent = percent;
+            afterContainer.style.width = percent + '%';
+            sliderHandle.style.left = percent + '%';
 
-            const x = percent * sliderWidth;
+            // Dynamic label opacity
+            labelBefore.style.opacity = percent > 15 ? 1 : 0;
+            labelAfter.style.opacity = percent < 85 ? 1 : 0;
 
-            afterContainer.style.width = (percent * 100) + '%';
-            sliderLine.style.left = (percent * 100) + '%';
-            sliderHandle.style.left = (percent * 100) + '%';
-            restorationScan.style.left = (percent * 100) + '%';
-
-            // Update labels
-            labelAfter.style.opacity = percent > 0.2 ? 1 : 0;
-            labelBefore.style.opacity = percent < 0.8 ? 1 : 0;
-        }
-
-        // Update slider position (for drag events)
-        function updateSlider(x) {
-            const percent = x / sliderWidth;
-            updateSliderByPercent(percent);
+            // Create sparkles on drag
+            if (isDragging && Math.random() > 0.6) {
+                createSparkle();
+            }
         }
 
         // Create sparkle effect
-        function createSparkle(x, y) {
+        function createSparkle() {
             const sparkle = document.createElement('div');
             sparkle.className = 'sparkle';
-            sparkle.style.left = x + 'px';
-            sparkle.style.top = y + 'px';
-            sparkle.style.animation = 'sparkleAnim 0.6s ease-out forwards';
+            sparkle.style.left = sliderPosition + '%';
+            sparkle.style.top = (Math.random() * 100) + '%';
+            sparkle.style.setProperty('--tx', (Math.random() - 0.5) * 50 + 'px');
+            sparkle.style.setProperty('--ty', (Math.random() - 0.5) * 50 + 'px');
+
             sparklesContainer.appendChild(sparkle);
+            requestAnimationFrame(() => sparkle.classList.add('active'));
             setTimeout(() => sparkle.remove(), 600);
         }
 
-        // Handle interaction start
-        function handleStart(e) {
-            e.preventDefault();
-            isDragging = true;
-            sliderHandle.style.cursor = 'grabbing';
+        // Get position from event
+        function getPositionFromEvent(e) {
+            const rect = sliderContainer.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            return ((clientX - rect.left) / rect.width) * 100;
+        }
 
+        // First interaction - start timer for CTA
+        function onFirstInteraction() {
             if (!hasInteracted) {
                 hasInteracted = true;
-                instruction.style.opacity = '0';
-                setTimeout(() => instruction.style.display = 'none', 300);
 
-                // Start CTA timer
-                ctaTimer = setTimeout(() => {
+                // Start timer to show CTA after X seconds
+                ctaTimer = setTimeout(function() {
                     showCTA();
                 }, CTA_DELAY);
             }
         }
 
-        // Handle movement
-        function handleMove(e) {
-            if (!isDragging) return;
+        // Drag handlers
+        function startDrag(e) {
+            isDragging = true;
+            onFirstInteraction();
+            updateSlider(getPositionFromEvent(e));
             e.preventDefault();
-
-            const rect = sliderContainer.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const x = clientX - rect.left;
-
-            updateSlider(x);
-
-            // Sparkles along slider line
-            if (Math.random() > 0.6) {
-                const sparkleY = rect.top + Math.random() * rect.height;
-                createSparkle(clientX, sparkleY);
-            }
         }
 
-        // Handle interaction end
-        function handleEnd() {
+        function onDrag(e) {
+            if (!isDragging) return;
+            updateSlider(getPositionFromEvent(e));
+            e.preventDefault();
+        }
+
+        function endDrag() {
             isDragging = false;
-            sliderHandle.style.cursor = 'grab';
         }
 
-        // Show CTA
+        // Show CTA screen
         function showCTA() {
-            ctaScreen.classList.add('active');
+            screen1.style.display = 'none';
+            screen1.classList.add('hidden');
+            screen2.style.display = 'flex';
+            screen2.classList.remove('hidden');
         }
 
-        // Event listeners
-        sliderContainer.addEventListener('mousedown', handleStart);
-        sliderContainer.addEventListener('touchstart', handleStart, { passive: false });
-
-        document.addEventListener('mousemove', handleMove);
-        document.addEventListener('touchmove', handleMove, { passive: false });
-
-        document.addEventListener('mouseup', handleEnd);
-        document.addEventListener('touchend', handleEnd);
+        // Event listeners - Slider
+        sliderContainer.addEventListener('mousedown', startDrag);
+        sliderContainer.addEventListener('touchstart', startDrag, { passive: false });
+        document.addEventListener('mousemove', onDrag);
+        document.addEventListener('touchmove', onDrag, { passive: false });
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
 
         // Install button
-        installBtn.addEventListener('click', ExitHandler);
+        installBtn.addEventListener('click', clickOut);
         installBtn.addEventListener('touchend', function(e) {
             e.preventDefault();
-            ExitHandler();
+            clickOut();
         });
 
         // Initialize
-        init();
-        window.addEventListener('resize', init);
+        updateSlider(50);
     </script>
 </body>
 </html>
